@@ -1,10 +1,23 @@
-from flask import Flask
+import os
+import psycopg2
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
+def get_db_connection():
+    conn = psycopg2.connect(host='localhost',
+                            database='todo',
+                            user=os.environ['DB_USERNAME'],
+                            password=os.environ['DB_PASSWORD'])
+    return conn
+
+
 @app.route('/')
 def index():
-    return 'Hello, World!'
-
-if __name__ == '__main__':
-    app.run()
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM todos;')
+    todos = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('index.html', todos=todos)
